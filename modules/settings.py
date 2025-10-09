@@ -344,9 +344,9 @@ def register_settings_handlers(bot):
                 globals.cptoken = "cptoken"
                 globals.pwtoken = "pwtoken"
                 globals.vidwatermark = '/d'
-                globals.raw_text2 = '480'
-                globals.quality = '480p'
-                globals.res = '854x480'
+                globals.raw_text2 = '720'
+                globals.quality = '720p'
+                globals.res = '720×1280'
                 globals.topic = '/d'
                 await editable.edit(f"✅ Settings reset as default !", reply_markup=keyboard)
             else:
