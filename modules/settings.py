@@ -140,34 +140,49 @@ def register_settings_handlers(bot):
     async def video_thumbnail(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="thummbnail_command")]])
-        editable = await callback_query.message.edit(f"Send the Video Thumb URL or Send /d \n<blockquote><b>Note </b>- For document format send : No</blockquote>", reply_markup=keyboard)
+        # UPDATED PROMPT: Added /file option for high quality/document mode
+        editable = await callback_query.message.edit(f"**Send Video Thumb URL or Send /d**\n\n<blockquote>**ओरिजिनल क्वालिटी (फाइल के रूप में) भेजने के लिए: /file**</blockquote>", reply_markup=keyboard)
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.startswith("http://") or input_msg.text.startswith("https://"):
                 globals.thumb = input_msg.text
-                await editable.edit(f"✅ Thumbnail set successfully from the URL !", reply_markup=keyboard)
+                globals.send_as_document = False # Video/Photo mode
+                await editable.edit(f"✅ Thumbnail set successfully from the URL !\n(Mode: Standard Video)", reply_markup=keyboard)
             elif input_msg.text.lower() == "/d":
                 globals.thumb = "/d"
-                await editable.edit(f"✅ Thumbnail set to default !", reply_markup=keyboard)
+                globals.send_as_document = False # Video/Photo mode
+                await editable.edit(f"✅ Thumbnail set to default !\n(Mode: Standard Video)", reply_markup=keyboard)
+            elif input_msg.text.lower() == "/file": # New option for high quality/document mode
+                globals.thumb = "/d" 
+                globals.send_as_document = True # Set to True for sending as Document
+                await editable.edit(f"✅ Video will be sent as **Original File (Document)** for best quality.", reply_markup=keyboard)
             else:
-                globals.thumb = input_msg.text
-                await editable.edit(f"✅ Video in Document Format is enabled !", reply_markup=keyboard)
+                await editable.edit(f"**Invalid input.** Please send a URL, /d, or /file.", reply_markup=keyboard)
+
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set thumbnail:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            await editable.edit(f"<b>❌ Failed to set thumbnail/mode:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
     @bot.on_callback_query(filters.regex("pddf_thumbnail_command"))
     async def pdf_thumbnail_button(client, callback_query):
       keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="thummbnail_command")]])
-      caption = ("<b>⋅ This Feature is Not Working Yet ⋅</b>")
-      await callback_query.message.edit_media(
-        InputMediaPhoto(
-            media="https://envs.sh/GVI.jpg",
-            caption=caption
-        ),
-        reply_markup=keyboard
-      )
+      # FEATURE ENABLED: Logic to set PDF Thumbnail
+      editable = await callback_query.message.edit(f"**Send PDF Thumbnail URL or Send /d**", reply_markup=keyboard)
+      input_msg = await bot.listen(editable.chat.id)
+      try:
+          if input_msg.text.startswith("http://") or input_msg.text.startswith("https://"):
+              globals.pdf_thumb = input_msg.text # New global variable
+              await editable.edit(f"✅ PDF Thumbnail set successfully from the URL !", reply_markup=keyboard)
+          elif input_msg.text.lower() == "/d":
+              globals.pdf_thumb = "/d"
+              await editable.edit(f"✅ PDF Thumbnail set to default !", reply_markup=keyboard)
+          else:
+              await editable.edit(f"**Invalid input.** Please send a URL or /d.", reply_markup=keyboard)
+      except Exception as e:
+          await editable.edit(f"<b>❌ Failed to set PDF thumbnail:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+      finally:
+          await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
     @bot.on_callback_query(filters.regex("add_credit_command"))
     async def credit(client, callback_query):
@@ -267,46 +282,53 @@ def register_settings_handlers(bot):
     async def handle_quality(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit("__**Enter resolution or Video Quality (`144`, `240`, `360`, `480`, `720`, `1080`) or Send /d**__", reply_markup=keyboard)
+        # UPDATED PROMPT: Added CRF value for compression control
+        editable = await callback_query.message.edit(
+            "__**Enter Resolution (e.g., 720) and CRF value (e.g., 23) in this format: `Resolution,CRF` (e.g., `720,23`):**__\n\n"
+            "<blockquote>- **Resolution:** `144`, `240`, `360`, `480`, `720`, `1080`\n"
+            "- **CRF (Quality):** `18` (Best Quality, Large File) to `32` (Low Quality, Small File). Default: `25`</blockquote>"
+            , reply_markup=keyboard)
         input_msg = await bot.listen(editable.chat.id)
         try:
-            if input_msg.text.lower() == "144":
-                globals.raw_text2 = '144'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '256x144'
-                await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
-            elif input_msg.text.lower() == "240":
-                globals.raw_text2 = '240'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '426x240'
-                await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
-            elif input_msg.text.lower() == "360":
-                globals.raw_text2 = '360'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '640x360'
-                await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
-            elif input_msg.text.lower() == "480":
-                globals.raw_text2 = '480'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '854x480'
-                await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
-            elif input_msg.text.lower() == "720":
+            text = input_msg.text.lower()
+            if text == "/d":
                 globals.raw_text2 = '720'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '1280x720'
-                await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
-            elif input_msg.text.lower() == "1080":
-                globals.raw_text2 = '1080'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '1920x1080'
-                await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
+                globals.quality = '720p'
+                globals.res = '1280x720' 
+                globals.crf = '25' # Default compression
+                await editable.edit(f"✅ Video Quality set to Default: 720p & CRF 25!", reply_markup=keyboard)
+                
+            elif ',' in text:
+                res_val, crf_val = [x.strip() for x in text.split(',', 1)]
+                
+                # Resolution Mapping Logic
+                resolution_map = {
+                    '144': '256x144', '240': '426x240', '360': '640x360', 
+                    '480': '854x480', '720': '1280x720', '1080': '1920x1080'
+                }
+                
+                if res_val in resolution_map:
+                    globals.raw_text2 = res_val
+                    globals.quality = f"{res_val}p"
+                    globals.res = resolution_map[res_val]
+                else:
+                    raise ValueError("Invalid Resolution.")
+
+                # CRF Logic
+                if crf_val.isdigit() and 18 <= int(crf_val) <= 32: # CRF range check
+                    globals.crf = crf_val
+                else:
+                    raise ValueError("Invalid CRF value. Use 18 to 32.")
+
+                await editable.edit(f"✅ Video Quality set: {globals.quality} & CRF {globals.crf} !", reply_markup=keyboard)
+            
             else:
-                globals.raw_text2 = '720'
-                globals.quality = f"{globals.raw_text2}p"
-                globals.res = '720×1280'
-                await editable.edit(f"✅ Video Quality set {globals.quality} as Default !", reply_markup=keyboard)  
-        except Exception as e:
+                raise ValueError("Invalid format. Use 'Resolution,CRF' or '/d'.")
+
+        except ValueError as e:
             await editable.edit(f"<b>❌ Failed to set Video Quality:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+        except Exception as e:
+            await editable.edit(f"<b>❌ An unexpected error occurred:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -344,9 +366,13 @@ def register_settings_handlers(bot):
                 globals.cptoken = "cptoken"
                 globals.pwtoken = "pwtoken"
                 globals.vidwatermark = '/d'
+                # NEW DEFAULT VALUES
                 globals.raw_text2 = '720'
                 globals.quality = '720p'
-                globals.res = '720×1280'
+                globals.res = '1280x720' 
+                globals.crf = '25' 
+                globals.send_as_document = False
+                globals.pdf_thumb = '/d'
                 globals.topic = '/d'
                 await editable.edit(f"✅ Settings reset as default !", reply_markup=keyboard)
             else:
