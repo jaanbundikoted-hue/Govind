@@ -301,9 +301,9 @@ def register_settings_handlers(bot):
                 globals.res = '1920x1080'
                 await editable.edit(f"✅ Video Quality set {globals.quality} !", reply_markup=keyboard)
             else:
-                globals.raw_text2 = '480'
+                globals.raw_text2 = '720'
                 globals.quality = f"{globals.raw_text2}p"
-                globals.res = '854x480'
+                globals.res = '720×1280'
                 await editable.edit(f"✅ Video Quality set {globals.quality} as Default !", reply_markup=keyboard)  
         except Exception as e:
             await editable.edit(f"<b>❌ Failed to set Video Quality:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
